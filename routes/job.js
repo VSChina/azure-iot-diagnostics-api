@@ -6,14 +6,13 @@ router.get('/get', (req, res) => {
     var id = req.query.id;
     var connectionString = req.query.connection_string;
     if (!id || !connectionString) {
-        res.sendStatus(404);
+        res.sendStatus(400);
     }
     var JobClient = require('azure-iothub').JobClient.fromConnectionString(connectionString);
 
     JobClient.getJob(id, (err, result) => {
         if (err) {
-            res.write('Could not get job status: ' + err.message);
-            res.status(404);
+            res.status(500).send('Could not get job status: ' + err.message);
         } else {
             console.log(`Job: ${id} - status: ${result.status}`);
             res.writeHead(200, { "Content-Type": "application/json" });
@@ -25,8 +24,8 @@ router.get('/get', (req, res) => {
 
 router.get('/trigger', (req, res) => {
     var connectionString = req.query.connection_string;
-    if (!connectionString) {
-        res.sendStatus(404);
+    if (!connectionString || (!req.query.diag_enable && !req.query.diag_rate)) {
+        res.sendStatus(400);
     }
     var twinPatch = {
         etag: '*',
@@ -41,29 +40,50 @@ router.get('/trigger', (req, res) => {
         twinPatch.properties.desired.diag_sample_rate = req.query.diag_rate;
     }
     var jobId = uuid.v4();
-    var queryCondition = '';
-    if (req.query.devices) {
-        queryCondition = "deviceId IN ['" + req.query.devices.replace(",","','") + "']";
-    } else {
-        var devices = [];
-        var Registry = require('azure-iothub').Registry.fromConnectionString(connectionString);
-        Registry.list((err, deviceList) => {
+    var queryCondition = getQueryCondition(req.query.devices,connectionString);
+    try {
+        var JobClient = require('azure-iothub').JobClient.fromConnectionString(connectionString);
+    }
+    catch (e) {
+        res.status(500).send(e.message);
+    }
+    queryCondition.then((query) => {
+        JobClient.scheduleTwinUpdate(jobId, query, twinPatch, new Date(), 3600, (err) => {
             if (err) {
-                res.write('Could not trigger job: ' + err.message);
-                res.status(404);
+                res.status(500).send('Could not schedule twin update job: ' + err);
             } else {
-                console.log(`${deviceList.length} device(s) found.`);
-                deviceList.forEach((device) => {
-                    this.devices.push(device.deviceId);
-                });
-                queryCondition = `deviceId IN ['${this.devices.join("','")}']`;
+                res.end(jobId);
             }
         });
-    }
+    }).catch((err) => {
+        res.status(500).send(err);
+    })
 
-    var JobClient = require('azure-iothub').JobClient.fromConnectionString(connectionString);
-    JobClient.scheduleTwinUpdate(jobId,queryCondition,twinPatch,new Date(),3600,()=>{});
-    res.end(jobId);
+
 });
+
+function getQueryCondition(deviceString,connectionString) {
+    return new Promise((resolve, reject) => {
+        if (deviceString) {
+            resolve("deviceId IN ['" + deviceString.replace(",", "','") + "']");
+        } else {
+            var devices = [];
+            var Registry = require('azure-iothub').Registry.fromConnectionString(connectionString);
+            Registry.list((err, deviceList) => {
+                if (err) {
+                    console.log('mjerror')
+                    reject('Could not trigger job: ' + err.message);
+                } else {
+                    console.log(`${deviceList.length} device(s) found.`);
+                    deviceList.forEach((device) => {
+                        devices.push(device.deviceId);
+                    });
+                    console.log(devices.length);
+                    resolve(`deviceId IN ['${devices.join("','")}']`);
+                }
+            });
+        }
+    });
+}
 
 module.exports = router;
