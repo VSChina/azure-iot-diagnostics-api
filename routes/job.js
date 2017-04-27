@@ -65,7 +65,7 @@ router.get('/trigger', (req, res) => {
 function getQueryCondition(deviceString,connectionString) {
     return new Promise((resolve, reject) => {
         if (deviceString) {
-            resolve("deviceId IN ['" + deviceString.replace(",", "','") + "']");
+            resolve("deviceId IN ['" + deviceString.replace(/,/g, "','") + "']");
         } else {
             var devices = [];
             var Registry = require('azure-iothub').Registry.fromConnectionString(connectionString);
