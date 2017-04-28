@@ -1,10 +1,11 @@
 var express = require('express');
 var router = express.Router();
 var uuid = require('uuid');
+var Util = require('../util/util');
 
 router.get('/get', (req, res) => {
     var id = req.query.id;
-    var connectionString = req.query.connection_string;
+    var connectionString = Util.getConnectionString();
     if (!id || !connectionString) {
         res.sendStatus(400);
     }
@@ -23,7 +24,7 @@ router.get('/get', (req, res) => {
 });
 
 router.get('/trigger', (req, res) => {
-    var connectionString = req.query.connection_string;
+    var connectionString = Util.getConnectionString();
     if (!connectionString || (!req.query.diag_enable && !req.query.diag_rate)) {
         res.sendStatus(400);
     }

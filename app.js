@@ -10,6 +10,7 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var job = require('./routes/job');
 var device = require('./routes/device');
+var metric = require('./routes/metric');
 
 var app = express();
 
@@ -34,6 +35,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/job', job);
 app.use('/device', device);
+app.use('/metric', metric);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
