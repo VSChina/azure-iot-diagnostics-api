@@ -11,6 +11,7 @@
     "test:integration": "mocha --recursive test/integration"
   },
   "dependencies": {
+    "apicache": "^0.8.4",
     "azure-iothub": "^1.1.9",
     "body-parser": "^1.13.3",
     "cookie-parser": "^1.3.3",

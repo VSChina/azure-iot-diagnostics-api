@@ -3,6 +3,7 @@ var router = express.Router();
 var request = require('request');
 var node_util = require('util');
 var Util = require('../util/util');
+var apicache = require('apicache');
 
 var restUrl = 'https://api.applicationinsights.io/beta/apps/%s/metrics/%s?%s&aggregation=%s';
 var d2cPath = 'customMetrics/D2CLatency';
@@ -10,7 +11,7 @@ var saPath = 'customMetrics/StreamJobLatency';
 var failurePath = 'customMetrics/StreamFailureCount';
 /* GET home page. */
 
-router.get('/get', function (req, res) {
+router.get('/get',apicache.middleware('2 minutes'), function (req, res) {
     var appId = Util.getAppId();
     if (!appId) {
         res.status(500).send("App id missing")
