@@ -11,7 +11,7 @@ var saPath = 'customMetrics/StreamJobLatency';
 var failurePath = 'customMetrics/StreamFailureCount';
 /* GET home page. */
 
-router.get('/get',apicache.middleware('2 minutes'), function (req, res) {
+router.get('/get/:param',apicache.middleware('2 minutes'), function (req, res) {
     var appId = Util.getAppId();
     if (!appId) {
         res.status(500).send("App id missing")
@@ -24,7 +24,7 @@ router.get('/get',apicache.middleware('2 minutes'), function (req, res) {
         }
         keys.push(key);
     }
-    var param = req.query.param;
+    var param = req.params.param;
     if (!param) {
         res.sendStatus(400);
     }
@@ -78,9 +78,9 @@ router.get('/get',apicache.middleware('2 minutes'), function (req, res) {
             }
         }
     }).then((result) => {
-        res.send(result)
+        res.send(result);
     }).catch((error) => {
-        res.status(500).send(error)
+        res.status(500).send(error);
     });
 
 });
