@@ -1,9 +1,11 @@
 var express = require('express');
 var router = express.Router();
 var uuid = require('uuid');
+var Util = require('../util/util');
+
 var device = express();
 router.get('/get_total', (req, res) => {
-    var connectionString = req.query.connection_string;
+    var connectionString = Util.getConnectionString();
     if (!connectionString) {
         res.sendStatus(400);
     }
