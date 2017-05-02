@@ -8,7 +8,7 @@ var apicache = require('apicache');
 var restUrl = 'https://api.applicationinsights.io/beta/apps/%s/metrics/%s?%s&aggregation=%s';
 var d2cPath = 'customMetrics/D2CLatency';
 var saPath = 'customMetrics/StreamJobLatency';
-var failurePath = 'customMetrics/StreamFailureCount';
+var failurePath = 'customMetrics/StreamInvalidMessage';
 /* GET home page. */
 
 router.get('/get/:param',apicache.middleware('2 minutes'), function (req, res) {
