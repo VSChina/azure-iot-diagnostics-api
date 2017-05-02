@@ -4,7 +4,7 @@ class Util {
     }
 
     static getApiKey(index) {
-        return process.env["APPLICATION_INSIGHT_API_KEY"+index];
+        return process.env["APPLICATION_INSIGHT_API_KEY"+(index+1)];
     }
 
     static getAppId() {
