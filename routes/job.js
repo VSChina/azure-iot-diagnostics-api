@@ -51,7 +51,7 @@ router.get('/trigger', (req, res) => {
     queryCondition.then((query) => {
         JobClient.scheduleTwinUpdate(jobId, query, twinPatch, new Date(), 3600, (err) => {
             if (err) {
-                res.status(500).send('Could not schedule twin update job: ' + err);
+                res.status(500).send('Could not schedule twin update job: ' + err.Message);
             } else {
                 res.end(jobId);
             }
