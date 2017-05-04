@@ -11,7 +11,7 @@ var saPath = 'customMetrics/StreamJobLatency';
 var failurePath = 'customMetrics/StreamInvalidMessage';
 /* GET home page. */
 
-router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) {
+router.get('/get/:param',apicache.middleware('2 minutes'), function (req, res) {
     var appId = Util.getAppId();
     if (!appId) {
         res.status(500).send("App id missing")
