@@ -11,7 +11,6 @@ var routes = require('./routes/index');
 var job = require('./routes/job');
 var device = require('./routes/device');
 var metric = require('./routes/metric');
-
 var app = express();
 
 var env = process.env.NODE_ENV || 'development';
@@ -31,6 +30,7 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/static', express.static((path.join(__dirname, 'portal/static'))));
 
 app.use('/', routes);
 app.use('/job', job);
