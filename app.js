@@ -10,8 +10,8 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var job = require('./routes/job');
 var device = require('./routes/device');
+var portal = require('./routes/portal.js');
 var metric = require('./routes/metric');
-
 var app = express();
 
 var env = process.env.NODE_ENV || 'development';
@@ -31,10 +31,12 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/static', express.static('portal/static'))
 
 app.use('/', routes);
 app.use('/job', job);
 app.use('/device', device);
+app.use('/portal', portal);
 app.use('/metric', metric);
 
 /// catch 404 and forward to error handler
