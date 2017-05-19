@@ -8,7 +8,9 @@ var apicache = require('apicache');
 var restUrl = 'https://api.applicationinsights.io/beta/apps/%s/metrics/%s?%s&aggregation=%s';
 var d2cPath = 'customMetrics/D2CLatency';
 var saPath = 'customMetrics/StreamJobLatency';
-var failurePath = 'customMetrics/StreamInvalidMessage';
+var saFailurePath = 'customMetrics/StreamInvalidMessage';
+var funcPath = 'customMetrics/FunctionLatency';
+var funcFailurePath = 'customMetrics/FunctionInvalidMessage';
 /* GET home page. */
 
 router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) {
@@ -17,7 +19,7 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
         res.status(500).send("App id missing")
     }
     var keys = [];
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 7; i++) {
         var key = Util.getApiKey(i);
         if (!key) {
             res.status(500).send("Api key missing")
@@ -31,7 +33,7 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
 
     new Promise((resolve, reject) => {
         var result = {};
-        var counter = 5;
+        var counter = 7;
         request(node_util.format(restUrl, appId, d2cPath, param,'avg'), {
             headers: {
                 "x-api-key": keys[0]
@@ -56,11 +58,23 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
             }
         }, apiCallback.bind(this, resolve, reject, 'sa_count',saPath,'count'));
 
-        request(node_util.format(restUrl, appId, failurePath, param,'sum'), {
+        request(node_util.format(restUrl, appId, saFailurePath, param,'sum'), {
             headers: {
                 "x-api-key": keys[4]
             }
-        }, apiCallback.bind(this, resolve, reject, 'failure_sum',failurePath,'sum'));
+        }, apiCallback.bind(this, resolve, reject, 'sa_failure_count',saFailurePath,'sum'));
+
+        request(node_util.format(restUrl, appId, funcPath, param,'count'), {
+            headers: {
+                "x-api-key": keys[5]
+            }
+        }, apiCallback.bind(this, resolve, reject, 'func_count',funcFailurePath,'count'));
+
+        request(node_util.format(restUrl, appId, saFailurePath, param,'sum'), {
+            headers: {
+                "x-api-key": keys[6]
+            }
+        }, apiCallback.bind(this, resolve, reject, 'func_failure_count',funcFailurePath,'sum'));
 
         function apiCallback(resolve, reject, key,path,type, error, response, body) {
             console.log('callback called');
