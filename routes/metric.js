@@ -19,7 +19,7 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
         res.status(500).send("App id missing")
     }
     var keys = [];
-    for (var i = 0; i < 7; i++) {
+    for (var i = 0; i < 8; i++) {
         var key = Util.getApiKey(i);
         if (!key) {
             res.status(500).send("Api key missing")
@@ -33,7 +33,7 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
 
     new Promise((resolve, reject) => {
         var result = {};
-        var counter = 7;
+        var counter = 8;
         request(node_util.format(restUrl, appId, d2cPath, param,'avg'), {
             headers: {
                 "x-api-key": keys[0]
@@ -75,6 +75,12 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
                 "x-api-key": keys[6]
             }
         }, apiCallback.bind(this, resolve, reject, 'func_failure_count',funcFailurePath,'sum'));
+
+        request(node_util.format(restUrl, appId, funcPath, param,'avg'), {
+            headers: {
+                "x-api-key": keys[7]
+            }
+        }, apiCallback.bind(this, resolve, reject, 'func_avg',funcPath,'avg'));
 
         function apiCallback(resolve, reject, key,path,type, error, response, body) {
             console.log('callback called');
