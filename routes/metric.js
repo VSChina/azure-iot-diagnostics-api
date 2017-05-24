@@ -68,9 +68,9 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
             headers: {
                 "x-api-key": keys[5]
             }
-        }, apiCallback.bind(this, resolve, reject, 'func_count',funcFailurePath,'count'));
+        }, apiCallback.bind(this, resolve, reject, 'func_count',funcPath,'count'));
 
-        request(node_util.format(restUrl, appId, saFailurePath, param,'sum'), {
+        request(node_util.format(restUrl, appId, funcFailurePath, param,'sum'), {
             headers: {
                 "x-api-key": keys[6]
             }
