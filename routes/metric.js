@@ -19,7 +19,7 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
         res.status(500).send("App id missing")
     }
     var keys = [];
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < 5; i++) {
         var key = Util.getApiKey(i);
         if (!key) {
             res.status(500).send("Api key missing")
@@ -33,54 +33,36 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
 
     new Promise((resolve, reject) => {
         var result = {};
-        var counter = 8;
-        request(node_util.format(restUrl, appId, d2cPath, param,'avg'), {
+        var counter = 5;
+        request(node_util.format(restUrl, appId, d2cPath, param,'avg,count,max'), {
             headers: {
                 "x-api-key": keys[0]
             }
-        }, apiCallback.bind(this, resolve, reject, 'd2c_avg',d2cPath,'avg'));
+        }, apiCallback.bind(this, resolve, reject, 'd2c_success',d2cPath,'avg,count,max'));
 
-        request(node_util.format(restUrl, appId, saPath, param,'avg'), {
+        request(node_util.format(restUrl, appId, saPath, param,'avg,count,max'), {
             headers: {
                 "x-api-key": keys[1]
             }
-        }, apiCallback.bind(this, resolve, reject, 'sa_avg',saPath,'avg'));
+        }, apiCallback.bind(this, resolve, reject, 'sa_success',saPath,'avg,count,max'));
 
-        request(node_util.format(restUrl, appId, d2cPath, param,'count'), {
+        request(node_util.format(restUrl, appId, funcPath, param,'avg,count,max'), {
             headers: {
                 "x-api-key": keys[2]
             }
-        }, apiCallback.bind(this, resolve, reject, 'd2c_count',d2cPath,'count'));
-
-        request(node_util.format(restUrl, appId, saPath, param,'count'), {
+        }, apiCallback.bind(this, resolve, reject, 'func_success',funcPath,'avg,count,max'));
+        
+        request(node_util.format(restUrl, appId, saFailurePath, param,'sum'), {
             headers: {
                 "x-api-key": keys[3]
             }
-        }, apiCallback.bind(this, resolve, reject, 'sa_count',saPath,'count'));
-
-        request(node_util.format(restUrl, appId, saFailurePath, param,'sum'), {
-            headers: {
-                "x-api-key": keys[4]
-            }
         }, apiCallback.bind(this, resolve, reject, 'sa_failure_count',saFailurePath,'sum'));
-
-        request(node_util.format(restUrl, appId, funcPath, param,'count'), {
-            headers: {
-                "x-api-key": keys[5]
-            }
-        }, apiCallback.bind(this, resolve, reject, 'func_count',funcPath,'count'));
 
         request(node_util.format(restUrl, appId, funcFailurePath, param,'sum'), {
             headers: {
-                "x-api-key": keys[6]
+                "x-api-key": keys[4]
             }
         }, apiCallback.bind(this, resolve, reject, 'func_failure_count',funcFailurePath,'sum'));
-
-        request(node_util.format(restUrl, appId, funcPath, param,'avg'), {
-            headers: {
-                "x-api-key": keys[7]
-            }
-        }, apiCallback.bind(this, resolve, reject, 'func_avg',funcPath,'avg'));
 
         function apiCallback(resolve, reject, key,path,type, error, response, body) {
             console.log('callback called');
@@ -90,7 +72,11 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
             } else if (response.statusCode != 200) {
                 reject("Invalid status code " + response.statusCode);
             } else {
-                result[key] = body.value[path][type];
+                var types = type.split(",");
+                result[key] = {};
+                for(var i in types) {
+                    result[key][types[i]] = body.value[path][types[i]];
+                }
             }
             counter--;
             if (counter == 0) {
