@@ -11,11 +11,11 @@ var saPath = 'customMetrics/StreamJobLatency';
 var saFailurePath = 'customMetrics/StreamInvalidMessage';
 var funcPath = 'customMetrics/FunctionLatency';
 var funcFailurePath = 'customMetrics/FunctionInvalidMessage';
-var kustoPath = 'https://analytics.applicationinsights.io/subscriptions/%s/resourcegroups/%s/components/%s';
+var kustoPath = 'https://analytics.applicationinsights.io%s/components/%s';
 /* GET home page. */
 
 router.get('/kusto', function(req, res) {
-    res.redirect(node_util.format(kustoPath,process.env.SUBSCRIPTION_ID,process.env.RESOURCE_GROUP_NAME,process.env.APPLICATION_INSIGHTS_NAME));
+    res.redirect(node_util.format(kustoPath,process.env.RESOURCE_GROUP_NAME,process.env.APPLICATION_INSIGHTS_NAME));
 });
 
 router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) {
