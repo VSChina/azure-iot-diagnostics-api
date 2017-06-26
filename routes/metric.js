@@ -5,6 +5,7 @@ var node_util = require('util');
 var azure = require("azure-storage");
 var Util = require('../util/util');
 var apicache = require('apicache');
+var fs = require('fs');
 
 var restUrl = 'https://api.applicationinsights.io/beta/apps/%s/metrics/%s?%s&aggregation=%s';
 var d2cPath = 'customMetrics/D2CLatency';
@@ -105,9 +106,9 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
 
         //create bug if: 20 failures in past 10 mins
         function createBugIfNecessary(entries, utcTime){
-            if(entries.length == 0)
+            if(entries.length == 0 || fs.existsSync('bug_created'))
                 return;
-
+            
             var threshold = 20;
             var startTime = timeUtc - 600;
             var len = entries.length;
@@ -122,9 +123,72 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
             }
             if(failureCount >= threshold){
                 //TODO: create bug
+                createBug();
                 console.log("Bug created");
+                fs.writeFileSync('bug_created','1');
             }
         }
+
+        function createBug(title = "Create bug from node js", creator = "Renlong Tu", reproSteps = "test repro steps") {
+            var request = require('request');
+            var accessToken = "lnucss6gdzhshocushxkrwqiosvcn77sliiiixslcoe72u6gc5ra";
+            var json = `
+        [
+            {
+                    "op": "add",
+                    "path": "/fields/System.Title",
+                    "value": "${title}"
+            },
+            {
+                    "op": "add",
+                    "path": "/fields/Microsoft.DevDiv.IssueType",
+                    "value": "Code Defect"
+            },
+            {
+                    "op": "add",
+                    "path": "/fields/System.AreaPath",
+                    "value": "VSIoT\\\\E2E Diagnostic"
+            },
+            {
+                    "op": "add",
+                    "path": "/fields/System.CreatedBy",
+                    "value": "${creator}"
+                },
+            {
+                    "op": "add",
+                    "path": "/fields/Microsoft.VSTS.TCM.ReproSteps",
+                    "value": "${reproSteps}"
+            }, {
+                    "op": "add",
+                    "path": "/fields/Microsoft.VSTS.Common.Priority",
+                    "value": "1"
+            }, {
+                    "op": "add",
+                    "path": "/fields/Microsoft.VSTS.Common.Severity",
+                    "value": "2 - High"
+            }
+        ]
+        `;
+
+            var options = {
+                url: 'https://mseng.visualstudio.com/DefaultCollection/VSIoT/_apis/wit/workitems/$Bug?api-version=1.0',
+                dataType: 'json',
+                headers: {
+                    'Authorization': 'Basic ' + new Buffer("" + ":" + accessToken).toString('base64'),
+                    'content-type': 'application/json-patch+json'
+                },
+                body: json
+            };
+
+            request.patch(options, function(err, res, body) {
+                if (err) {
+                    console.error('error: ', err);
+                } else {
+                    // console.log(body);
+                }
+            });
+        }
+
 
         function apiCallback(resolve, reject, timeUtc, tableName, error) {
             console.log('callback called:' + tableName);
