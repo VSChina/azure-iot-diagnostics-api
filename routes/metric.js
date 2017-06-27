@@ -29,7 +29,7 @@ var timeSecondsMap = {
     "timespan=PT10M": 600,
     "timespan=PT1H": 3600,
     "timespan=PT24H": 878400,
-    "timespan=PT7D": 6148800
+    "timespan=P7D": 6148800
 };
 
 /* GET home page. */
