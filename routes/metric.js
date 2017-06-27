@@ -124,7 +124,7 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
                 var curTime = new Date();
                 var pastTime =new Date();
                 pastTime.setMinutes(pastTime.getMinutes() - 10);
-                createBug("[E2E Diagnostics] Raspi cannot Send Temperature Messages Correctly in Past 10 Minutes", "Renlong Tu", `[${pastTime}] - [${curTime}]` + ' 20 failures in past 10 mins was detected.\nError: Fail to read temperature sensor data.');
+                createBug("[E2E Diagnostics] Raspi cannot Send Temperature Messages Correctly in Past 10 Minutes", "Renlong Tu", `[${pastTime.toISOString()}] - [${curTime.toISOString()}]` + ' 20 failures in past 10 mins was detected.\nError: Fail to read temperature sensor data.');
                 console.log("Bug created");
                 fs.writeFileSync('bug_created','1');
             }
