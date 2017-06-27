@@ -108,7 +108,6 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
         function createBugIfNecessary(entries, utcTime){
             if(entries.length == 0 || fs.existsSync('bug_created'))
                 return;
-            
             var threshold = 20;
             var startTime = timeUtc - 600;
             var len = entries.length;
@@ -122,14 +121,16 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
                     break;
             }
             if(failureCount >= threshold){
-                //TODO: create bug
-                createBug();
+                var curTime = new Date();
+                var pastTime =new Date();
+                pastTime.setMinutes(pastTime.getMinutes() - 10);
+                createBug("[E2E Diagnostics] Raspi cannot Send Temperature Messages Correctly in Past 10 Minutes", "Renlong Tu", `[${pastTime}] - [${curTime}]` + ' 20 failures in past 10 mins was detected.\nError: Fail to read temperature sensor data.');
                 console.log("Bug created");
                 fs.writeFileSync('bug_created','1');
             }
         }
 
-        function createBug(title = "Create bug from node js", creator = "Renlong Tu", reproSteps = "test repro steps") {
+        function createBug(title, creator, reproSteps) {
             var request = require('request');
             var accessToken = "lnucss6gdzhshocushxkrwqiosvcn77sliiiixslcoe72u6gc5ra";
             var json = `
