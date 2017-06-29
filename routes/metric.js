@@ -17,6 +17,8 @@ var kustoPath = 'https://analytics.applicationinsights.io%s/components/%s';
 
 var tableService = azure.createTableService();
 
+var isCreatingBug = false;
+
 var tableKeyNameMap = {
     "D2CLatencyTable": "d2c_success",
     "StreamLatencyTable": "sa_success",
@@ -106,7 +108,7 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
 
         //create bug if: 20 failures in past 10 mins
         function createBugIfNecessary(entries, utcTime){
-            if(entries.length == 0 || fs.existsSync('bug_created'))
+            if(entries.length == 0 || isCreatingBug || fs.existsSync('bug_created'))
                 return;
             var threshold = 20;
             var startTime = timeUtc - 600;
@@ -121,6 +123,7 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
                     break;
             }
             if(failureCount >= threshold){
+                isCreatingBug = true;
                 var curTime = new Date();
                 var pastTime =new Date();
                 pastTime.setMinutes(pastTime.getMinutes() - 10);
@@ -170,7 +173,7 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
         ]
         `;
 
-            var options = {
+            return {
                 url: 'https://mseng.visualstudio.com/DefaultCollection/VSIoT/_apis/wit/workitems/$Bug?api-version=1.0',
                 dataType: 'json',
                 headers: {
@@ -182,16 +185,19 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
         }
 
         function createBugWithRetry(options, retryTimes) {
-            if(--retryTimes < 0)
+            if(--retryTimes < 0){
+                isCreatingBug = false;
                 return;
+            }
 
             request.patch(options, function(err, res, body) {
                 if (err) {
                     console.error("create bug err: ", err);
-                    createBugWithRetry(options,  retryTimes);
+                    createBugWithRetry(options, retryTimes);
                 } else {
                     console.log("Bug created");
                     fs.writeFileSync('bug_created','1');
+                    isCreatingBug = false;
                 }
             });
         }
