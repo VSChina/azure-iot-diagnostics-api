@@ -124,14 +124,13 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
                 var curTime = new Date();
                 var pastTime =new Date();
                 pastTime.setMinutes(pastTime.getMinutes() - 10);
-                createBug("[E2E Diagnostics] Raspi cannot Send Temperature Messages Correctly in Past 10 Minutes", "Renlong Tu", `[${pastTime.toISOString()}] - [${curTime.toISOString()}]` + ' 20 failures in past 10 mins was detected.\r\nIoT Hub: eriwan-e2e-demo-iot\r\nDevice: myFirstDevice\r\nError: Fail to read temperature sensor data.');
-                console.log("Bug created");
-                fs.writeFileSync('bug_created','1');
+                var bugOptions = getBugOptions("[E2E Diagnostics] Raspi cannot Send Temperature Messages Correctly in Past 10 Minutes", "Renlong Tu", 
+                `[${pastTime.toISOString()}] - [${curTime.toISOString()}]` + ' 20 failures in past 10 mins was detected.\r\nIoT Hub: eriwan-e2e-demo-iot\r\nDevice: myFirstDevice\r\nError: Fail to read temperature sensor data.');
+                createBugWithRetry(bugOptions, 3);
             }
         }
 
-        function createBug(title, creator, reproSteps) {
-            var request = require('request');
+        function getBugOptions(title, creator, reproSteps){
             var accessToken = "lnucss6gdzhshocushxkrwqiosvcn77sliiiixslcoe72u6gc5ra";
             var json = `
         [
@@ -180,16 +179,22 @@ router.get('/get/:param', apicache.middleware('5 seconds'), function (req, res) 
                 },
                 body: json
             };
+        }
+
+        function createBugWithRetry(options, retryTimes) {
+            if(--retryTimes < 0)
+                return;
 
             request.patch(options, function(err, res, body) {
                 if (err) {
-                    console.error('error: ', err);
+                    console.error("create bug err: ", err);
+                    createBugWithRetry(options,  retryTimes);
                 } else {
-                    // console.log(body);
+                    console.log("Bug created");
+                    fs.writeFileSync('bug_created','1');
                 }
             });
         }
-
 
         function apiCallback(resolve, reject, timeUtc, tableName, error) {
             console.log('callback called:' + tableName);
