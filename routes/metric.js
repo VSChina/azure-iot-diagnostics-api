@@ -34,7 +34,7 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
         res.status(500).send("App id missing")
     }
     var keys = [];
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 6; i++) {
         var key = Util.getApiKey(i);
         if (!key) {
             res.status(500).send("Api key missing")
