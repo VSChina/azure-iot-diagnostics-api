@@ -12,6 +12,16 @@ var saFailurePath = 'customMetrics/StreamInvalidMessage';
 var funcPath = 'customMetrics/FunctionLatency';
 var funcFailurePath = 'customMetrics/FunctionInvalidMessage';
 var kustoPath = 'https://analytics.applicationinsights.io%s/components/%s';
+
+var durationPath = 'requests/duration';
+var requestDurationUrl = `https://api.applicationinsights.io/beta/apps/%s/metrics/${durationPath}?%s&aggregation=%s`;
+
+var requestFailurePath = 'requests/failed';
+var requestFailureUrl =`https://api.applicationinsights.io/beta/apps/%s/metrics/${requestFailurePath}?%s&aggregation=%s`;
+
+var exceptionPath = 'exceptions/count';
+var exceptionsUrl = `https://api.applicationinsights.io/beta/apps/%s/metrics/${exceptionPath}?%s&aggregation=%s&filter=not%20startswith(exception%2FinnermostMessage%2C%20\'E2EDiagnosticsError\')`;
+
 /* GET home page. */
 
 router.get('/kusto', function(req, res) {
@@ -38,7 +48,7 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
 
     new Promise((resolve, reject) => {
         var result = {};
-        var counter = 5;
+        var counter = 6;
         request(node_util.format(restUrl, appId, d2cPath, param,'avg,count,max'), {
             headers: {
                 "x-api-key": keys[0]
@@ -51,25 +61,33 @@ router.get('/get/:param',apicache.middleware('10 seconds'), function (req, res) 
             }
         }, apiCallback.bind(this, resolve, reject, 'sa_success',saPath,'avg,count,max'));
 
-        request(node_util.format(restUrl, appId, funcPath, param,'avg,count,max'), {
+        console.log(node_util.format(requestDurationUrl, appId, param,'avg,count,max'));
+        request(node_util.format(requestDurationUrl, appId, param,'avg,count,max'), {
             headers: {
                 "x-api-key": keys[2]
             }
-        }, apiCallback.bind(this, resolve, reject, 'func_success',funcPath,'avg,count,max'));
-        
+        }, apiCallback.bind(this, resolve, reject, 'func_success', durationPath, 'avg,count,max'));
+
+
         request(node_util.format(restUrl, appId, saFailurePath, param,'sum'), {
             headers: {
                 "x-api-key": keys[3]
             }
         }, apiCallback.bind(this, resolve, reject, 'sa_failure_count',saFailurePath,'sum'));
 
-        request(node_util.format(restUrl, appId, funcFailurePath, param,'sum'), {
+        request(node_util.format(requestFailureUrl, appId, param,'sum'), {
             headers: {
                 "x-api-key": keys[4]
             }
-        }, apiCallback.bind(this, resolve, reject, 'func_failure_count',funcFailurePath,'sum'));
+        }, apiCallback.bind(this, resolve, reject, 'func_failure_count',requestFailurePath,'sum'));
 
-        function apiCallback(resolve, reject, key,path,type, error, response, body) {
+        request(node_util.format(exceptionsUrl, appId, param,'sum'), {
+            headers: {
+                "x-api-key": keys[5]
+            }
+        }, apiCallback.bind(this, resolve, reject, 'func_system_failure',exceptionPath,'sum'));
+
+        function apiCallback(resolve, reject, key, path, type, error, response, body) {
             console.log('callback called');
             body = JSON.parse(body);
             if (error) {
